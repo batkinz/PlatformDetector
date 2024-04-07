@@ -1,0 +1,12 @@
+{
+  "name": "Q-it cookie detector",
+  "manifest_version": 3,
+  "version": "1.0",
+  "description": "Detects what cookies are installed on a domain | heam@queue-it.com",
+  "permissions": ["cookies"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  }
+}
