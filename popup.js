@@ -1,44 +1,55 @@
-const form = document.getElementById("control-row");
-const message = document.getElementById("message");
+// POPUP SCRIPT
 
-const log = console.log;
-log("Popup loaded.");
-
-// Add event handler to submit button
-form.addEventListener("submit", handleFormSubmit);
-
-async function handleFormSubmit(event) {
-  const domain = "queue-it.com";
-  const cookies = await chrome.runtime.sendMessage({
+/**
+ *
+ * @param {*} event
+ */
+async function manualTest(event) {
+  const domain = await getActiveTabDomain();
+  const msg = document.getElementById("msg-div");
+  const response = await chrome.runtime.sendMessage({
     msg: "getCookiesForDomain",
     arguments: [domain],
   });
-  //alert("Popup got cookies: ", cookies);
+  const domainCookies = response["cookies"];
+  const knownPlatforms = response["knownPlatforms"];
+  msg.innerHTML += "Cookies: " + JSON.stringify(domainCookies) + "<br />";
+  msg.innerHTML +=
+    "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
 }
 
-/* 
-async function OLD_handleFormSubmit(event) {
-  event.preventDefault();
-
-  const cookieNames = ["__cf_bm", "ak_bmsc", "Queue-Fair", "__cfwaitingroom"]; // Add the cookie names you want to check for here
-
-  // Map the cookie names to their respective service name
-  const cookieMap = {
-    __cf_bm: "Cloudflare Bot Management",
-    ak_bmsc: "Akamai Bot Manager",
-    "Queue-Fair": "Queue-Fair",
-    __cfwaitingroom: "Cloudflare Waiting Room",
-  };
-
-  await chrome.cookies.getAll({}, (cookies) => {
-    message.hidden = false;
-
-    for (var i = 0; i < cookies.length; i++) {
-      if (cookieNames.includes(cookies[i].name)) {
-        message.innerHTML += `<b>${
-          cookieMap[cookies[i].name]
-        }</b> is present on this domain<br>`;
+/**
+ * Returns the domain name from the URL from the current active tab
+ * @returns string
+ */
+async function getActiveTabDomain() {
+  let url = null;
+  let domain = null;
+  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+  const activeTab = tabs[0];
+  if (activeTab) {
+    url = activeTab.url;
+    if (url) {
+      const m = url.match(
+        /https?:\/\/((www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.([a-z]{2,6}){1})/i
+      );
+      if (m) {
+        domain = m[1];
       }
     }
-  });
-} */
+  }
+
+  return domain;
+}
+
+/**
+ * Initialize popup
+ */
+const initializePopup = function () {
+  var btn = document.getElementById("btn_find_cookies");
+  btn.addEventListener("click", manualTest);
+  console.log("Popup initialized.");
+};
+
+// Initialize popup
+window.addEventListener("load", initializePopup);
