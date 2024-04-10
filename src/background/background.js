@@ -1,3 +1,6 @@
+// Imports
+import { getActiveTab, registerTabListener } from "../utils/tabHelper.js";
+
 // BACKGROUND SCRIPT
 
 // The defaults to use when no map has been defined
@@ -95,9 +98,11 @@ const getCookieMap = async function () {
 /**
  * Init
  */
-const initializeBackgroundScript = function () {
+const initializeBackgroundScript = async function () {
   console.log("INIT!");
   registerMessageListener();
+  registerTabListener();
+  //
 };
 
 // Initialize background
