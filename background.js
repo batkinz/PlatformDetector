@@ -1,19 +1,7 @@
 // BACKGROUND SCRIPT
 
-// Map a known platform to a list of cookie names it can be identified by
-const cookieMap = {
-  "Queue-it": ["QueueitAccepted"],
-  Zendesk: ["_zendesk_session"],
-  "Cloudflare Bot Management": ["__cf_bm"],
-  "Akamai Bot Manager": ["ak_bmsc"],
-  "Queue-Fair": ["Queue-Fair"],
-  "Cloudflare Waiting Room": ["__cfwaitingroom"],
-};
-
-const initializeBackgroundScript = function () {
-  console.log("INIT!");
-  registerMessageListener();
-};
+// The defaults to use when no map has been defined
+const defaultCookieMap = {};
 
 /**
  * Register a message listener which will listen to chrome.runtime.sendMessage triggers
@@ -29,11 +17,19 @@ const registerMessageListener = function () {
       if (domain) {
         getCookiesForDomain(domain).then((cookies) => {
           console.log("cookies: " + cookies);
-          const knownPlatforms = checkForKnownPlatforms(cookies);
-          console.log("Known Platforms: " + knownPlatforms);
-          sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
+          checkForKnownPlatforms(cookies).then((knownPlatforms) => {
+            console.log("Known Platforms: " + knownPlatforms);
+            sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
+          });
         });
       }
+    } else if (request.msg == "getCookieMap") {
+      getCookieMap().then((cookieMap) => {
+        sendResponse({ cookieMap: cookieMap });
+      });
+    } else if (request.msg == "getDefaultCookieMap") {
+      const dcm = getDefaultCookieMap();
+      sendResponse({ defaultCookieMap: defaultCookieMap });
     }
     return true;
   });
@@ -44,9 +40,10 @@ const registerMessageListener = function () {
  * @param {*} cookies
  * @returns
  */
-const checkForKnownPlatforms = function (cookies) {
+const checkForKnownPlatforms = async function (cookies) {
   let platformName = null;
   const platforms = [];
+  const cookieMap = await getCookieMap();
   const cookieMapKeys = Object.keys(cookieMap);
 
   for (var i = 0; i < cookies.length; i++) {
@@ -54,8 +51,9 @@ const checkForKnownPlatforms = function (cookies) {
       platformName = cookieMapKeys[j];
       platformCookies = cookieMap[platformName];
       for (var k = 0; k < platformCookies.length; k++) {
-        // @TODO: This is an exact match - improve it by preg match
-        if (platformCookies[k] == cookies[i]) {
+        platformCookieRegEx = new RegExp(platformCookies[k]);
+        //console.log("Testing for: " + platformCookies[k], platformCookieRegEx);
+        if (cookies[i].match(platformCookieRegEx)) {
           platforms.push(platformName);
           break;
         }
@@ -78,6 +76,28 @@ const getCookiesForDomain = async function (target_domain) {
   });
 
   return cookieNames;
+};
+
+const getDefaultCookieMap = function () {
+  return defaultCookieMap;
+};
+
+const getCookieMap = async function () {
+  let cookieMap = getDefaultCookieMap();
+  const data = await chrome.storage.sync.get(["cookieMap"]);
+  if (data && data["cookieMap"]) {
+    cookieMap = JSON.parse(data["cookieMap"]);
+  }
+  //console.log(cookieMap);
+  return cookieMap;
+};
+
+/**
+ * Init
+ */
+const initializeBackgroundScript = function () {
+  console.log("INIT!");
+  registerMessageListener();
 };
 
 // Initialize background

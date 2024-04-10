@@ -1,9 +1,9 @@
 {
-  "name": "Q-it cookie detector",
   "manifest_version": 3,
+  "name": "Q-it cookie detector",
   "version": "1.0",
   "description": "Detects what cookies are installed on a domain | heam@queue-it.com",
-  "permissions": ["cookies"],
+  "permissions": ["cookies", "tabs", "storage"],
   "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
@@ -11,5 +11,6 @@
   },
   "background": {
     "service_worker": "background.js"
-  }
+  },
+  "options_ui": { "page": "options.html", "open_in_tab": true }
 }

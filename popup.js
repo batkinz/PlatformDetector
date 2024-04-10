@@ -13,6 +13,8 @@ async function manualTest(event) {
   });
   const domainCookies = response["cookies"];
   const knownPlatforms = response["knownPlatforms"];
+  msg.innerHTML = "";
+  msg.innerHTML += "Domain: " + JSON.stringify(domain) + "<br />";
   msg.innerHTML += "Cookies: " + JSON.stringify(domainCookies) + "<br />";
   msg.innerHTML +=
     "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
@@ -46,7 +48,7 @@ async function getActiveTabDomain() {
  * Initialize popup
  */
 const initializePopup = function () {
-  var btn = document.getElementById("btn_find_cookies");
+  const btn = document.getElementById("btn_find_cookies");
   btn.addEventListener("click", manualTest);
   console.log("Popup initialized.");
 };

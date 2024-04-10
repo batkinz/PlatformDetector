@@ -1,0 +1,22 @@
+body {
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: white;
+    flex-direction: column;
+}
+
+textarea.cookie-map {
+    resize: none;
+    width: 80%;
+    min-height: 250px;
+    margin: 0;
+    padding: 10px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    background-color: white;
+    flex-direction: column;
+}
