@@ -1,5 +1,6 @@
 // Imports
-import { getActiveTab, registerTabListener } from "../utils/tabHelper.js";
+import { findCookies } from "../utils/findCookies.js";
+import { registerTabListener } from "../utils/tabHelper.js";
 
 // BACKGROUND SCRIPT
 
@@ -9,32 +10,30 @@ const defaultCookieMap = {};
 /**
  * Register a message listener which will listen to chrome.runtime.sendMessage triggers
  */
-const registerMessageListener = function () {
-  chrome.runtime.onMessage.addListener(function (
+function registerMessageListener() {
+  chrome.runtime.onMessage.addListener(async function onMessage(
     request,
-    sender,
+    _,
     sendResponse
   ) {
-    if (request.msg == "getCookiesForDomain") {
-      const domain = request.arguments[0];
-      if (domain) {
-        getCookiesForDomain(domain).then((cookies) => {
-          console.log("cookies: " + cookies);
-          checkForKnownPlatforms(cookies).then((knownPlatforms) => {
-            console.log("Known Platforms: " + knownPlatforms);
-            sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
-          });
-        });
-      }
+    if (request.msg === "getCookiesForTab") {
+      const tabId = request.arguments[0];
+      if (tabId == null) return;
+      
+      const cookies = await findCookies(tabId);
+
+      console.log("cookies: " + cookies);
+      const knownPlatforms = await checkForKnownPlatforms(cookies)
+      
+      console.log("Known Platforms: " + knownPlatforms);
+      sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
     } else if (request.msg == "getCookieMap") {
       getCookieMap().then((cookieMap) => {
         sendResponse({ cookieMap: cookieMap });
       });
     } else if (request.msg == "getDefaultCookieMap") {
-      const dcm = getDefaultCookieMap();
       sendResponse({ defaultCookieMap: defaultCookieMap });
     }
-    return true;
   });
 };
 
@@ -43,67 +42,43 @@ const registerMessageListener = function () {
  * @param {*} cookies
  * @returns
  */
-const checkForKnownPlatforms = async function (cookies) {
-  let platformName = null;
+async function checkForKnownPlatforms(cookies) {
   const platforms = [];
   const cookieMap = await getCookieMap();
   const cookieMapKeys = Object.keys(cookieMap);
 
-  for (var i = 0; i < cookies.length; i++) {
-    for (var j = 0; j < cookieMapKeys.length; j++) {
-      platformName = cookieMapKeys[j];
-      platformCookies = cookieMap[platformName];
-      for (var k = 0; k < platformCookies.length; k++) {
-        platformCookieRegEx = new RegExp(platformCookies[k]);
-        //console.log("Testing for: " + platformCookies[k], platformCookieRegEx);
-        if (cookies[i].match(platformCookieRegEx)) {
+  cookies.forEach(cookie => {
+    cookieMapKeys.some(platformName => {
+      const platformCookies = cookieMap[platformName];
+      return platformCookies.some(platformCookie => {
+        const platformCookieRegEx = new RegExp(platformCookie);
+        if (cookie.match(platformCookieRegEx)) {
           platforms.push(platformName);
-          break;
+          return true; // Break the loop
         }
-      }
-    }
-  }
+        return false;
+      });
+    });
+  });
 
   return platforms;
 };
 
-/**
- * Returns list of known cookies for a specific domain
- * @param {*} target_domain
- */
-const getCookiesForDomain = async function (target_domain) {
-  console.log("getting cookies for domain: " + target_domain);
-  const cookies = await chrome.cookies.getAll({ domain: target_domain });
-  const cookieNames = cookies.map((c) => {
-    return c.name;
-  });
-
-  return cookieNames;
-};
-
-const getDefaultCookieMap = function () {
-  return defaultCookieMap;
-};
-
-const getCookieMap = async function () {
-  let cookieMap = getDefaultCookieMap();
+async function getCookieMap() {
   const data = await chrome.storage.sync.get(["cookieMap"]);
   if (data && data["cookieMap"]) {
-    cookieMap = JSON.parse(data["cookieMap"]);
+    return JSON.parse(data["cookieMap"]);
   }
-  //console.log(cookieMap);
-  return cookieMap;
+
+  return defaultCookieMap;
 };
 
 /**
  * Init
  */
-const initializeBackgroundScript = async function () {
+(function initializeBackgroundScript() {
   console.log("INIT!");
   registerMessageListener();
   registerTabListener();
   //
-};
-
-// Initialize background
-initializeBackgroundScript();
+})()

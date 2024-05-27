@@ -1,0 +1,14 @@
+{
+  "name": "platformdetector",
+  "version": "1.0.0",
+  "description": "This is a POC browser extension project for notifying about the presence of specific cookies indicating the use of a specific platform on the site in the current browser tab.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "prettier": "^3.2.5"
+  }
+}

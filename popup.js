@@ -4,17 +4,18 @@
  *
  * @param {*} event
  */
-async function manualTest(event) {
-  const domain = await getActiveTabDomain();
+async function manualTest() {
+  debugger
+  const tabId = await getActiveTabId();
   const msg = document.getElementById("msg-div");
   const response = await chrome.runtime.sendMessage({
-    msg: "getCookiesForDomain",
-    arguments: [domain],
+    msg: "getCookiesForTab",
+    arguments: [tabId],
   });
   const domainCookies = response["cookies"];
   const knownPlatforms = response["knownPlatforms"];
   msg.innerHTML = "";
-  msg.innerHTML += "Domain: " + JSON.stringify(domain) + "<br />";
+  msg.innerHTML += "Domain: " + JSON.stringify(tabId) + "<br />";
   msg.innerHTML += "Cookies: " + JSON.stringify(domainCookies) + "<br />";
   msg.innerHTML +=
     "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
@@ -24,24 +25,10 @@ async function manualTest(event) {
  * Returns the domain name from the URL from the current active tab
  * @returns string
  */
-async function getActiveTabDomain() {
-  let url = null;
-  let domain = null;
+async function getActiveTabId() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
   const activeTab = tabs[0];
-  if (activeTab) {
-    url = activeTab.url;
-    if (url) {
-      const m = url.match(
-        /https?:\/\/((www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.([a-z]{2,6}){1})/i
-      );
-      if (m) {
-        domain = m[1];
-      }
-    }
-  }
-
-  return domain;
+  return activeTab?.id;
 }
 
 /**
