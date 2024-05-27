@@ -1,6 +1,5 @@
 // Imports
-import { findCookies } from "../utils/findCookies.js";
-import { registerTabListener } from "../utils/tabHelper.js";
+import { findCookies, registerTabListener } from "../utils/tabHelper.js";
 
 // BACKGROUND SCRIPT
 
@@ -50,7 +49,7 @@ async function checkForKnownPlatforms(cookies) {
       const platformCookies = cookieMap[platformName];
       return platformCookies.some((platformCookie) => {
         const platformCookieRegEx = new RegExp(platformCookie);
-        if (cookie.match(platformCookieRegEx)) {
+        if (cookie.name.match(platformCookieRegEx)) {
           platforms.push(platformName);
           return true; // Break the loop
         }

@@ -5,15 +5,19 @@
  * @param {*} event
  */
 async function manualTest() {
-  debugger
   const tabId = await getActiveTabId();
-  const msg = document.getElementById("msg-div");
+
+  debugger;
+
   const response = await chrome.runtime.sendMessage({
     msg: "getCookiesForTab",
     arguments: [tabId],
   });
+
   const domainCookies = response["cookies"];
   const knownPlatforms = response["knownPlatforms"];
+
+  const msg = document.getElementById("msg-div");
   msg.innerHTML = "";
   msg.innerHTML += "Domain: " + JSON.stringify(tabId) + "<br />";
   msg.innerHTML += "Cookies: " + JSON.stringify(domainCookies) + "<br />";

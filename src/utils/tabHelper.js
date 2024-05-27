@@ -18,6 +18,8 @@ export async function findCookies(tabId) {
     });
     chrome.action.setBadgeTextColor({ color: "#FF0000" });
   }
+
+  return cookies;
 }
 
 async function tabFocusListener(e) {
