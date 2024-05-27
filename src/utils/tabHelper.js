@@ -1,14 +1,24 @@
-import { findCookies } from "./findCookies";
+export async function findCookies(tabId) {
+  const tab = await chrome.tabs.get(tabId);
+  if (tab?.url == null) return;
 
-const getActiveTab = async function () {
-  let answer = null;
-  const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  if (tabs) {
-    answer = tabs[0];
+  const tabUrl = new URL(tab.url);
+  const hostElements = tabUrl.hostname.split(".");
+  const rootDomain = `.${hostElements.at(-2)}.${hostElements.at(-1)}`;
+
+  const cookies = await chrome.cookies.getAll({ domain: rootDomain });
+  console.log("cookies", cookies);
+
+  chrome.action.setBadgeText({ tabId: tabId, text: "" });
+
+  if (cookies.length > 0) {
+    chrome.action.setBadgeText({
+      tabId: tabId,
+      text: cookies.length.toString(),
+    });
+    chrome.action.setBadgeTextColor({ color: "#FF0000" });
   }
-
-  return answer;
-};
+}
 
 async function tabFocusListener(e) {
   await findCookies(e.tabId);
@@ -18,7 +28,7 @@ async function tabUpdateListener(tabId) {
   await findCookies(tabId);
 }
 
-const registerTabListener = async function () {
+export async function registerTabListener() {
   console.log("Registering Win/Tab Listeners.");
   if (!chrome.tabs.onActivated.hasListener(tabFocusListener)) {
     chrome.tabs.onActivated.addListener(tabFocusListener);
@@ -26,6 +36,4 @@ const registerTabListener = async function () {
   if (!chrome.tabs.onUpdated.hasListener(tabUpdateListener)) {
     chrome.tabs.onUpdated.addListener(tabUpdateListener);
   }
-};
-
-export { getActiveTab, registerTabListener };
+}
