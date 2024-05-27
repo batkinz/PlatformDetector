@@ -12,7 +12,7 @@ const getActiveTab = async function () {
 
 async function tabFocusListener(e) {
   await findCookies(e.tabId);
-};
+}
 
 async function tabUpdateListener(tabId) {
   await findCookies(tabId);

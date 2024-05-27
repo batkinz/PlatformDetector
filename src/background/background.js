@@ -11,31 +11,29 @@ const defaultCookieMap = {};
  * Register a message listener which will listen to chrome.runtime.sendMessage triggers
  */
 function registerMessageListener() {
-  chrome.runtime.onMessage.addListener(async function onMessage(
-    request,
-    _,
-    sendResponse
-  ) {
-    if (request.msg === "getCookiesForTab") {
-      const tabId = request.arguments[0];
-      if (tabId == null) return;
-      
-      const cookies = await findCookies(tabId);
+  chrome.runtime.onMessage.addListener(
+    async function onMessage(request, _, sendResponse) {
+      if (request.msg === "getCookiesForTab") {
+        const tabId = request.arguments[0];
+        if (tabId == null) return;
 
-      console.log("cookies: " + cookies);
-      const knownPlatforms = await checkForKnownPlatforms(cookies)
-      
-      console.log("Known Platforms: " + knownPlatforms);
-      sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
-    } else if (request.msg == "getCookieMap") {
-      getCookieMap().then((cookieMap) => {
-        sendResponse({ cookieMap: cookieMap });
-      });
-    } else if (request.msg == "getDefaultCookieMap") {
-      sendResponse({ defaultCookieMap: defaultCookieMap });
+        const cookies = await findCookies(tabId);
+
+        console.log("cookies: " + cookies);
+        const knownPlatforms = await checkForKnownPlatforms(cookies);
+
+        console.log("Known Platforms: " + knownPlatforms);
+        sendResponse({ cookies: cookies, knownPlatforms: knownPlatforms });
+      } else if (request.msg === "getCookieMap") {
+        getCookieMap().then((cookieMap) => {
+          sendResponse({ cookieMap: cookieMap });
+        });
+      } else if (request.msg === "getDefaultCookieMap") {
+        sendResponse({ defaultCookieMap: defaultCookieMap });
+      }
     }
-  });
-};
+  );
+}
 
 /**
  * Check for known Platforms in the cookieMap
@@ -47,10 +45,10 @@ async function checkForKnownPlatforms(cookies) {
   const cookieMap = await getCookieMap();
   const cookieMapKeys = Object.keys(cookieMap);
 
-  cookies.forEach(cookie => {
-    cookieMapKeys.some(platformName => {
+  cookies.forEach((cookie) => {
+    cookieMapKeys.some((platformName) => {
       const platformCookies = cookieMap[platformName];
-      return platformCookies.some(platformCookie => {
+      return platformCookies.some((platformCookie) => {
         const platformCookieRegEx = new RegExp(platformCookie);
         if (cookie.match(platformCookieRegEx)) {
           platforms.push(platformName);
@@ -62,7 +60,7 @@ async function checkForKnownPlatforms(cookies) {
   });
 
   return platforms;
-};
+}
 
 async function getCookieMap() {
   const data = await chrome.storage.sync.get(["cookieMap"]);
@@ -71,7 +69,7 @@ async function getCookieMap() {
   }
 
   return defaultCookieMap;
-};
+}
 
 /**
  * Init
@@ -80,5 +78,4 @@ async function getCookieMap() {
   console.log("INIT!");
   registerMessageListener();
   registerTabListener();
-  //
-})()
+})();
