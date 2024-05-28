@@ -1,38 +1,33 @@
 // POPUP SCRIPT
 
+import { findCookies } from "./src/utils/tabHelper.js";
+
 /**
  *
  * @param {*} event
  */
 async function manualTest() {
-  const tabId = await getActiveTabId();
+  const tab = await getActiveTab();
+
+  const cookies = await findCookies(tab.id);
 
   debugger;
 
-  const response = await chrome.runtime.sendMessage({
-    msg: "getCookiesForTab",
-    arguments: [tabId],
-  });
-
-  const domainCookies = response["cookies"];
-  const knownPlatforms = response["knownPlatforms"];
-
   const msg = document.getElementById("msg-div");
   msg.innerHTML = "";
-  msg.innerHTML += "Domain: " + JSON.stringify(tabId) + "<br />";
-  msg.innerHTML += "Cookies: " + JSON.stringify(domainCookies) + "<br />";
-  msg.innerHTML +=
-    "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
+  msg.innerHTML += "Domain: " + JSON.stringify(tab?.url) + "<br />";
+  msg.innerHTML += "Cookies: " + JSON.stringify(cookies) + "<br />";
+  // msg.innerHTML +=
+  //   "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
 }
 
 /**
  * Returns the domain name from the URL from the current active tab
  * @returns string
  */
-async function getActiveTabId() {
+async function getActiveTab() {
   const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-  const activeTab = tabs[0];
-  return activeTab?.id;
+  return tabs[0];
 }
 
 /**

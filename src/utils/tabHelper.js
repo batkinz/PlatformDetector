@@ -1,25 +1,60 @@
+// The defaults to use when no map has been defined
+const defaultCookieMap = {};
+
+export async function getCookieMap() {
+  const data = await chrome.storage.sync.get(["cookieMap"]);
+  if (data && data["cookieMap"]) {
+    const cookieMap = JSON.parse(data["cookieMap"]);
+    return Object.entries(cookieMap).reduce(
+      (acc, [key, value]) => ({
+        ...acc,
+        [key]: value.map((v) => new RegExp(v)),
+      }),
+      {}
+    );
+  }
+
+  return defaultCookieMap;
+}
+
 export async function findCookies(tabId) {
   const tab = await chrome.tabs.get(tabId);
-  if (tab?.url == null) return;
+  if (tab?.url == null || !tab.url.startsWith("http")) return;
 
   const tabUrl = new URL(tab.url);
   const hostElements = tabUrl.hostname.split(".");
   const rootDomain = `.${hostElements.at(-2)}.${hostElements.at(-1)}`;
 
   const cookies = await chrome.cookies.getAll({ domain: rootDomain });
-  console.log("cookies", cookies);
+  const cookieMap = await getCookieMap();
+
+  const matchedCookies = {};
+  cookies.forEach((cookie) => {
+    for (const [platform, regexes] of Object.entries(cookieMap)) {
+      regexes.forEach((regex) => {
+        if (regex.test(cookie.name)) {
+          if (!matchedCookies[platform]) {
+            matchedCookies[platform] = [];
+          }
+          matchedCookies[platform].push(cookie);
+        }
+      });
+    }
+  });
+
+  const matchedCookieEntries = Object.entries(matchedCookies);
 
   chrome.action.setBadgeText({ tabId: tabId, text: "" });
 
-  if (cookies.length > 0) {
+  if (matchedCookieEntries.length > 0) {
     chrome.action.setBadgeText({
       tabId: tabId,
-      text: cookies.length.toString(),
+      text: matchedCookieEntries.length.toString(),
     });
     chrome.action.setBadgeTextColor({ color: "#FF0000" });
   }
 
-  return cookies;
+  return matchedCookieEntries;
 }
 
 async function tabFocusListener(e) {

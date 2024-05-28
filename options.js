@@ -4,7 +4,7 @@
  * Save configuration options
  * @param {*} event
  */
-const saveOptions = async function (event) {
+async function saveOptions() {
   console.log("saving...");
   const txtArea = document.getElementById("cookie-map-textarea");
   let cookieMap;
@@ -19,25 +19,23 @@ const saveOptions = async function (event) {
   await chrome.storage.sync.set({ cookieMap: cookieMapStr });
   console.log("Cookie map saved.", cookieMap);
   alert("Saved.");
-};
+}
 
 /**
  * Initialize options
  */
-const initializeOptions = async function () {
+async function initializeOptions() {
   const btn = document.getElementById("save-button");
   btn.addEventListener("click", saveOptions);
+
   // Send message to background
-  const response = await chrome.runtime.sendMessage({
-    msg: "getCookieMap",
-  });
-  const cookieMap = await response["cookieMap"];
-  const cookieMapStr = JSON.stringify(cookieMap);
+  const cookieMap = await chrome.storage.sync.get("cookieMap");
+  const cookieMapStr = JSON.stringify(cookieMap, null, 2);
   const txtArea = document.getElementById("cookie-map-textarea");
   txtArea.value = cookieMapStr;
   //
   console.log("Options initialized.");
-};
+}
 
 // Initialize popup
 window.addEventListener("load", initializeOptions);
