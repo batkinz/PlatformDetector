@@ -30,7 +30,11 @@ async function initializeOptions() {
 
   // Send message to background
   const cookieMap = await chrome.storage.sync.get("cookieMap");
-  const cookieMapStr = JSON.stringify(cookieMap, null, 2);
+  const cookieMapStr = JSON.stringify(
+    JSON.parse(cookieMap["cookieMap"]),
+    null,
+    2
+  );
   const txtArea = document.getElementById("cookie-map-textarea");
   txtArea.value = cookieMapStr;
   //
