@@ -8,17 +8,34 @@ import { findCookies } from "./src/utils/tabHelper.js";
  */
 async function manualTest() {
   const tab = await getActiveTab();
-
   const cookies = await findCookies(tab.id);
-
-  debugger;
 
   const msg = document.getElementById("msg-div");
   msg.innerHTML = "";
   msg.innerHTML += "Domain: " + JSON.stringify(tab?.url) + "<br />";
-  msg.innerHTML += "Cookies: " + JSON.stringify(cookies) + "<br />";
-  // msg.innerHTML +=
-  //   "Known Platforms: " + JSON.stringify(knownPlatforms) + "<br />";
+
+  if (cookies.length === 0) {
+    msg.innerHTML += "<b>No competitor cookies found.</b>";
+  }
+
+  cookies.forEach(([service, cookieList]) => {
+    const serviceDiv = document.createElement("div");
+    serviceDiv.innerHTML = `<strong>${service}</strong>`;
+
+    const cookieDetails = document.createElement("details");
+    const summary = document.createElement("summary");
+    summary.textContent = "Show Cookies";
+    cookieDetails.appendChild(summary);
+
+    cookieList.forEach((cookie) => {
+      const cookieInfo = document.createElement("pre");
+      cookieInfo.textContent = JSON.stringify(cookie, null, 2);
+      cookieDetails.appendChild(cookieInfo);
+    });
+
+    serviceDiv.appendChild(cookieDetails);
+    msg.appendChild(serviceDiv);
+  });
 }
 
 /**
@@ -33,11 +50,10 @@ async function getActiveTab() {
 /**
  * Initialize popup
  */
-const initializePopup = function () {
-  const btn = document.getElementById("btn_find_cookies");
-  btn.addEventListener("click", manualTest);
+function initializePopup() {
+  manualTest();
   console.log("Popup initialized.");
-};
+}
 
 // Initialize popup
 window.addEventListener("load", initializePopup);
